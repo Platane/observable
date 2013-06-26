@@ -19,7 +19,7 @@ Observable.prototype={
 		//do it latter if locked
 		if(this.lock){
 			this.stack.push({ 'fn':'on' , 'arguments':arguments });
-			return;
+			return this;
 		}
 
 		// deal with params
@@ -49,6 +49,8 @@ Observable.prototype={
 			postfix : eventPostfix,
 			data : !data ? [] : [data] ,
 		});
+
+		return this;
 	},
 
 	// (  )
@@ -65,7 +67,7 @@ Observable.prototype={
 		//do it latter if locked
 		if(this.lock){
 			this.stack.push({ 'fn':'off' , 'arguments':arguments });
-			return;
+			return this;
 		}
 
 		// deal with params
@@ -113,7 +115,7 @@ Observable.prototype={
 
 		// if needed instanciate the _listeners store
 		if(!this._listeners)
-			return;
+			return this;
 
 
 		// iterate throught some entry of the store, defined in lists
@@ -138,7 +140,7 @@ Observable.prototype={
 
 			// if needed instanciate the _listeners list
 			if(!this._listeners[eventPrefix])
-				return;
+				return this;
 
 
 			// iterate throught the list and delete item if they match the passing args
@@ -147,13 +149,15 @@ Observable.prototype={
 			var i=l.length;
 			while(i--)
 				if(
-						( eventPostfix == "" || l[i].postfix == eventPostfix )
+						( l[i].postfix == "" || eventPostfix == "" || l[i].postfix == eventPostfix )
 					&&	( !fn || l[i].fn == fn )
 					&&	( !context || l[i].ctx == context )
 					&&	( !data || ( l[i].data.length>0 && l[i].data[0] == data ) )
 				)
 					l.splice(i,1);
 		}
+
+		return this;
 	},
 
 	// ( event )
@@ -166,7 +170,7 @@ Observable.prototype={
 		var eventPostfix=re[3]||"";
 
 		if(!this._listeners || !this._listeners[eventPrefix] )
-			return;
+			return this;
 
 		var l=this._listeners[eventPrefix];
 
@@ -175,7 +179,7 @@ Observable.prototype={
 
 		var i=l.length;
 		while(i--)
-			if( eventPostfix == "" || l[i].postfix == eventPostfix )
+			if( l[i].postfix == "" || eventPostfix == "" || l[i].postfix == eventPostfix )
 				l[i].fn.apply(
 					l[i].ctx,
 					l[i].data.concat( data || [] )
@@ -189,11 +193,49 @@ Observable.prototype={
 		while(i--)
 			this[ this.stack[i].fn ].appy( this , this.stack[i].arguments );
 
-		if( (debug=true) ){
+		if( (debug=!true) ){
 			console.log( {
 				"event" : eventName ,
 				"_listeners" : this._listeners[eventPrefix] ,
 				"data" : data  });
 		}
+
+		return this;
+	},
+
+	qtrigger:function( eventName , data ){
+
+
+		if(!this._listeners || !this._listeners[eventName] )
+			return this;
+
+		var l=this._listeners[eventName];
+
+		// relegate the on and off to later
+		this.lock=true;
+
+		var i=l.length;
+		while(i--)
+				l[i].fn.apply(
+					l[i].ctx,
+					l[i].data.concat( data || [] )
+				);
+
+		// do the on and off that occur during the calls
+		this.lock=false;
+
+		this.stack=[];
+		var i=this.stack.length;
+		while(i--)
+			this[ this.stack[i].fn ].appy( this , this.stack[i].arguments );
+
+		if( (debug=!true) ){
+			console.log( {
+				"event" : eventName ,
+				"_listeners" : this._listeners[eventName] ,
+				"data" : data  });
+		}
+
+		return this;
 	},
 };
