@@ -174,8 +174,9 @@ Observable.prototype={
 
 		var l=this._listeners[eventPrefix];
 
-		// relegate the on and off to later
+		// delegate the on and off to later
 		this.lock=true;
+		this.stack=[];
 
 		var i=l.length;
 		while(i--)
@@ -188,10 +189,9 @@ Observable.prototype={
 		// do the on and off that occur during the calls
 		this.lock=false;
 
-		this.stack=[];
 		var i=this.stack.length;
 		while(i--)
-			this[ this.stack[i].fn ].appy( this , this.stack[i].arguments );
+			this[ this.stack[i].fn ].apply( this , this.stack[i].arguments );
 
 		if( (debug=!true) ){
 			console.log( {
@@ -213,6 +213,7 @@ Observable.prototype={
 
 		// relegate the on and off to later
 		this.lock=true;
+		this.stack=[];
 
 		var i=l.length;
 		while(i--)
@@ -223,11 +224,9 @@ Observable.prototype={
 
 		// do the on and off that occur during the calls
 		this.lock=false;
-
-		this.stack=[];
 		var i=this.stack.length;
 		while(i--)
-			this[ this.stack[i].fn ].appy( this , this.stack[i].arguments );
+			this[ this.stack[i].fn ].apply( this , this.stack[i].arguments );
 
 		if( (debug=!true) ){
 			console.log( {
